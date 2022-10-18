@@ -54,6 +54,17 @@ void paser_bt(String str)
         
     }
 
+        if (root["weight_last"])
+    {
+
+         digitalWrite(LED_PIN,HIGH);
+         SerialBT.println(message_bt);
+         delay(200);
+         digitalWrite(LED_PIN,LOW);
+
+        
+    }
+
   
 
     

@@ -18,13 +18,15 @@ long long time_message_weight = 0;
 void setup()
 {
    pinMode(LED_PIN, OUTPUT);
+   Wire.begin();
    Serial.begin(115200);
-   Serial2.begin(19200);
+   Serial2.begin(9600);
    Serial.println("Start");
+   Serial2.println("Start2");
    delay(1000);
 
    eepromIni();
-   String uid = "Trailer" + String(UID);
+   String uid = "WEIGHT_" + String(UID);
 
    SerialBT.begin(uid);
 }
@@ -44,7 +46,10 @@ void loop()
    {
       timer_2 = millis();
       if(millis() - time_message_weight  < 20000){
+         digitalWrite(LED_PIN,HIGH);
          SerialBT.println(message_bt);
+         delay(200);
+         digitalWrite(LED_PIN,LOW);
       }
    }
 
