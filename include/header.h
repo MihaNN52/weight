@@ -11,6 +11,7 @@
 extern LiquidCrystal_I2C lcd;
 extern BluetoothSerial SerialBT;
 #define LED_PIN 2
+#define POW 35
 
 
 extern int val_error_cd;
@@ -25,7 +26,8 @@ extern uint16_t ver;
 extern uint8_t mode;       
 extern uint16_t UID; 
 extern String message_bt;
-extern long long time_message_weight;       
+extern long long time_message_weight;      
+extern String CHIPID; 
 
 
 
