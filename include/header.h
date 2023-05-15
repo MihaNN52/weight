@@ -44,3 +44,4 @@ extern void paser_bt(String str);
 extern void send_bt(void);
 extern bool eepromIni(void);
 extern bool rs232(void);
+extern float maps(float x, float in_min, float in_max, float out_min, float out_max);

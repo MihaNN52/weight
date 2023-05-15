@@ -1,5 +1,11 @@
 #include "header.h"
 
+
+float maps(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 bool rs232()
 {
     String message = "";
@@ -49,8 +55,14 @@ bool rs232()
             message += buf[8];
             message += buf[9];
 
-            int val = 0;
+            float val = 0;
             val = analogRead(POW);
+            //2390 = 4.261
+            //1397 =2.608
+            //2000 =3.627
+            Serial.print("Power:");
+            Serial.println(val);
+            val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
 
             String uid = "weight_" + String(UID);
             message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message +", \"power\": " + val + "}";
