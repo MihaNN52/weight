@@ -1,9 +1,8 @@
 #include "header.h"
 
-
 float maps(float x, float in_min, float in_max, float out_min, float out_max)
 {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 bool rs232()
@@ -16,8 +15,8 @@ bool rs232()
     {
 
         inChar = Serial2.read();
-        Serial.print(inChar, HEX);
-        Serial.print(" ");
+        //Serial.print(inChar, HEX);
+        //Serial.print(" ");
 
         if (buf_len)
         {
@@ -32,12 +31,13 @@ bool rs232()
 
         if (buf_len > 25)
             break;
+        delay(20);
     }
     if (!buf_len)
         return false;
 
-    Serial.print("buf_len:");
-    Serial.println(buf_len);
+   // Serial.print("buf_len:");
+    //Serial.println(buf_len);
     // протокол первых весов
     if (buf[0] == 0x01 && buf[1] == 0x02 && buf[2] == 0x53 && buf[3] == 0x20)
     {
@@ -57,20 +57,46 @@ bool rs232()
 
             float val = 0;
             val = analogRead(POW);
-            //2390 = 4.261
-            //1397 =2.608
-            //2000 =3.627
+            // 2390 = 4.261
+            // 1397 =2.608
+            // 2000 =3.627
             Serial.print("Power:");
             Serial.println(val);
             val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
 
             String uid = "weight_" + String(UID);
-            message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message +", \"power\": " + val + "}";
+            message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
             time_message_weight = millis();
             Serial.print("message_bt");
             Serial.println(message_bt);
             return true;
         }
+    }
+    // протокол первых весов CAS
+    if (buf[0] == 0x20 && buf[1] == 0x20 && buf[2] == 0x20 && buf[10] == 0x0D && buf[11] == 0x0A)
+    {
+        message += buf[3];
+        message += buf[4];
+        message += buf[5];
+        message += buf[6];
+        message += buf[7];
+        
+
+        float val = 0;
+        val = analogRead(POW);
+        // 2390 = 4.261
+        // 1397 =2.608
+        // 2000 =3.627
+        Serial.print("Power:");
+        Serial.println(val);
+        val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
+
+        String uid = "weight_" + String(UID);
+        message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
+        time_message_weight = millis();
+        Serial.print("message_bt");
+        Serial.println(message_bt);
+        return true;
     }
 
     return false;

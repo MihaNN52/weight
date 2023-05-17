@@ -62,10 +62,10 @@ void loop()
    {
       timer_1 = millis();
    }
-   if (millis() - timer_2 > 2000)
+   if (millis() - timer_2 > 3000)
    {
       timer_2 = millis();
-      if(millis() - time_message_weight  < 20000){
+      if(millis() - time_message_weight  < 30000){
          digitalWrite(LED_PIN,HIGH);
          SerialBT.println(message_bt);
          delay(200);
