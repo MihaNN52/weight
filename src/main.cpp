@@ -8,13 +8,16 @@ long long timer_2 = 0;
 long long timer_3 = 0;
 long long timer_4 = 0;
 long long timer_5 = 0;
-
+long long time_232 = 0;
 uint16_t ver = 1;
 uint8_t mode = 0; //1 самые первые весы
 uint16_t UID = 0; //Номер
 String message_bt = "";
+String message_last = "";
 long long time_message_weight = 0;
 String CHIPID = "";
+float weght = 0;
+float weght_last = 0;
 
 void setup()
 {
@@ -65,9 +68,10 @@ void loop()
    if (millis() - timer_2 > 3000)
    {
       timer_2 = millis();
-      if(millis() - time_message_weight  < 30000){
+      if(millis() - time_message_weight  < 9000){
          digitalWrite(LED_PIN,HIGH);
          SerialBT.println(message_bt);
+         Serial.println("message_bt");
          delay(200);
          digitalWrite(LED_PIN,LOW);
       } else

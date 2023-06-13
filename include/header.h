@@ -21,6 +21,10 @@ extern long long timer_2;
 extern long long timer_3;
 extern long long timer_4;
 extern long long timer_5;
+extern long long time_232;
+extern String message_last;
+extern float weght;
+extern float weght_last;
 
 extern uint16_t ver;
 extern uint8_t mode;       

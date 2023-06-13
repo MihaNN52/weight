@@ -31,7 +31,8 @@ bool rs232()
 
         if (buf_len > 25)
             break;
-        delay(20);
+        //delay(1);
+        delayMicroseconds(800);
     }
     if (!buf_len)
         return false;
@@ -48,6 +49,7 @@ bool rs232()
             {
                 return false;
             }
+
             message += buf[4];
             message += buf[5];
             message += buf[6];
@@ -67,19 +69,39 @@ bool rs232()
             String uid = "weight_" + String(UID);
             message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
             time_message_weight = millis();
-            Serial.print("message_bt");
+            Serial.print("message_bt1:");
             Serial.println(message_bt);
+
             return true;
         }
     }
     // протокол первых весов CAS
-    if (buf[0] == 0x20 && buf[1] == 0x20 && buf[2] == 0x20 && buf[10] == 0x0D && buf[11] == 0x0A)
-    {
+    if ((buf[0] == 0x20 || buf[0] == 0x2D) && buf[1] == 0x20 && buf[2] == 0x20 && buf[10] == 0x0D && buf[11] == 0x0A)
+    {   
+        if (millis() - time_message_weight < 2000)
+        {
+            return false;
+        }
         message += buf[3];
         message += buf[4];
         message += buf[5];
         message += buf[6];
         message += buf[7];
+        weght = message.toFloat();
+
+
+        if(buf[0] == 0x2D){
+           message = "0"; 
+        }
+
+        if(weght >= weght_last && weght - weght_last < 0.015){//message_last == message 
+            weght = weght_last;
+            return false;
+        }
+        if(weght_last >= weght  &&  weght_last - weght < 0.015){//message_last == message 
+             weght = weght_last;
+            return false;
+        }
         
 
         float val = 0;
@@ -90,12 +112,14 @@ bool rs232()
         Serial.print("Power:");
         Serial.println(val);
         val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
-
+    
         String uid = "weight_" + String(UID);
         message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
         time_message_weight = millis();
-        Serial.print("message_bt");
+        Serial.print("message_bt2:");
         Serial.println(message_bt);
+        message_last =  message;
+        weght_last = weght;
         return true;
     }
 
