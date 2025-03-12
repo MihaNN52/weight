@@ -18,10 +18,12 @@ void bt()
 
 void paser_bt(String str)
 {
-    DynamicJsonBuffer jsonBuffer(200);
-    JsonObject &root = jsonBuffer.parseObject(str);
+    //DynamicJsonBuffer jsonBuffer(200);
+    //JsonObject &root = jsonBuffer.parseObject(str);
+    StaticJsonDocument<1100> root;
+    DeserializationError err = deserializeJson(root, str);
 
-    if (!root.success())
+    if (err)
     {
         Serial.print("Json ошибка синтаксиса, входное сообщение:");
         Serial.println(str);
@@ -33,13 +35,22 @@ void paser_bt(String str)
 
    
 
+    if (root["mode_eeprom"])
+    {
+
+        uint16_t x = root["mode"];
+        Serial.print("Mode eeprom:");
+        Serial.println(x);
+        eepromWrite(x, 0, 0);
+    }
     if (root["mode"])
     {
 
         uint16_t x = root["mode"];
         Serial.print("Mode:");
         Serial.println(x);
-        eepromWrite(x, 0, 0);
+        mode = x;
+      
     }
 
     if (root["uid"])
@@ -69,11 +80,13 @@ void paser_bt(String str)
 
     
 
-    root.printTo(str);
+    //root.printTo(str);
+    String output;
+    serializeJson(root, output);
 }
 
 
-
+/*
 bool eepromIni(){
   
   //eepromWrite(0x55,0, 1);
@@ -90,3 +103,4 @@ bool eepromIni(){
   Serial.print("UID:");Serial.println(UID);
   return true;
 }
+  */
