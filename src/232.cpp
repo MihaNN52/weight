@@ -39,6 +39,11 @@ bool rs232()
         }
         if (!buf_len)
             return false;
+
+        if (millis() - time_message_weight < 3000)
+        {
+            return false;
+        }
         // Формируем строку из принятых байт в HEX формате
         for (uint8_t i = 0; i < buf_len; i++)
         {
@@ -52,7 +57,7 @@ bool rs232()
                 message += ", ";
             }
         }
-        
+
         String uid = "weight_" + String(UID);
         message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + "}";
         time_message_weight = millis();
@@ -62,9 +67,11 @@ bool rs232()
     if (mode == 1 && protocol == 1) // разбор весов
     {
         String message = "";
-        uint8_t inChar;
-        char buf[30];
+        uint8_t inChar = 0;
+        ;
+        char buf[60] = {0};
         uint8_t buf_len = 0;
+
         while (Serial2.available() > 0)
         {
 
@@ -77,7 +84,7 @@ bool rs232()
                 buf[buf_len] = inChar;
                 buf_len++;
             }
-            if (!buf_len && inChar)
+            if (!buf_len && inChar && (inChar == 0x01 || inChar == 0x20 || inChar == 0x2D))
             {
                 buf[buf_len] = inChar;
                 buf_len++;
@@ -90,7 +97,15 @@ bool rs232()
         }
         if (!buf_len)
             return false;
-
+        /*
+                Serial.print("[232]PASKET IN: ");
+                for (uint8_t i = 0; i <= buf_len; i++)
+                {
+                    Serial.print(buf[i], HEX);
+                    Serial.print(" ");
+                }
+                Serial.println(" ");
+        */
         // Serial.print("buf_len:");
         // Serial.println(buf_len);
         // протокол первых весов
@@ -129,10 +144,10 @@ bool rs232()
                 return true;
             }
         }
-        // протокол первых весов CAS
+        // протокол первых весов CAS 60
         if ((buf[0] == 0x20 || buf[0] == 0x2D) && buf[1] == 0x20 && buf[10] == 0x0D && buf[11] == 0x0A)
         {
-            if (millis() - time_message_weight < 2000)
+            if (millis() - time_message_weight < 3000)
             {
                 return false;
             }
@@ -143,11 +158,43 @@ bool rs232()
             message += buf[6];
             message += buf[7];
             weght = message.toFloat();
+            if (buf[0] == 0x2D)
+                weght = weght * -1;
+
+            if (weght <= 0)
+            {
+                // weght = 0.0;
+            }
+
+            if (weght >= weght_last_2 && weght - weght_last_2 < 0.015)
+            { // message_last == message
+
+                count++;
+                time_count = millis();
+            }
+            if (weght_last_2 >= weght && weght_last_2 - weght < 0.015)
+            { // message_last == message
+
+                count++;
+                time_count = millis();
+            }
+
+            weght_last_2 = weght;
+            if (millis() - time_count > 300)
+                count = 0;
+
+            if (count < 10)
+                return 0;
+            else
+                count = 0;
 
             if (buf[0] == 0x2D)
             {
                 message = "0";
             }
+            if (weght == weght_last && millis() - time_message_weight < 20000)
+                return 0;
+
             /*
                     if(weght >= weght_last && weght - weght_last < 0.015){//message_last == message
                         weght = weght_last;
@@ -169,7 +216,7 @@ bool rs232()
             val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
 
             String uid = "weight_" + String(UID);
-            message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
+            message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
             time_message_weight = millis();
             Serial.print("[232] message_bt2:");
             Serial.println(message_bt);

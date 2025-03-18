@@ -54,34 +54,3 @@ void eepromWrite(uint8_t data, uint8_t block, uint8_t page)
     Wire.endTransmission();
     delay(5);
 }
-
-bool eepromIni(){
-  
-    //eepromWrite(0x55,0, 1);
-    //eepromWrite(0x66,0, 2);
-    //delay(100);
-  
-  
-    //UID = 0;
-    Serial.println("");
-    Serial.print("[EEPROM] Version:");Serial.println(ver);
-    mode = eepromRead(0, 0);
-    Serial.print("[EEPROM] Mode:");Serial.println(mode);
-  
-    UID = (eepromRead(0, 1) << 8) + eepromRead(0, 2);
-    Serial.print("[EEPROM] UID:");Serial.println(UID);
-    
-    protocol = eepromRead(0, 3);
-    Serial.print("[EEPROM] Protocol:");  Serial.println(protocol);
-    if(protocol == 255){
-  
-          protocol = 1;
-          eepromWrite(protocol, 0, 15);
-          Serial.print(F("[EEPROM] New Protocol:"));
-          Serial.println(protocol);
-    }
-  
-  
-  return true;
-  
-  }

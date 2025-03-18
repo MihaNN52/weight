@@ -1,7 +1,7 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 4;
+uint16_t ver = 1;
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
 const char *ssid = "protonupdate";
@@ -26,6 +26,9 @@ long long time_message_weight = 0;
 String CHIPID = "";
 float weght = 0;
 float weght_last = 0;
+uint8_t count = 0;
+long long time_count = 0;
+float weght_last_2 = 0;
 
 void setup()
 {
@@ -90,11 +93,13 @@ void loop()
       timer_2 = millis();
       if (millis() - time_message_weight < 9000)
       {
+         
          digitalWrite(LED_PIN, HIGH);
          SerialBT.println(message_bt);
          Serial.println("[LOOP] message_bt");
          delay(200);
          digitalWrite(LED_PIN, LOW);
+         
       }
       else
          digitalWrite(LED_PIN, LOW);
