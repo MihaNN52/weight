@@ -35,15 +35,24 @@ void setup()
    pinMode(LED_PIN, OUTPUT);
    Wire.begin();
    Serial.begin(115200);
-   Serial2.begin(9600);
+   
    Serial.println("[SETUP] Start");
-   Serial2.println("[SETUP] Start2");
+   
    delay(1000);
    digitalWrite(LED_PIN, HIGH);
    delay(3000);
    digitalWrite(LED_PIN, LOW);
 
    eepromIni();
+   if(protocol == 1)
+   {
+      Serial2.begin(9600);
+   }
+   if(protocol == 2)
+   {
+      Serial2.begin(57600);
+   }
+   Serial2.println("[SETUP] Start2");
    uint64_t chipid = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
    // Serial.printf("ESP32 Chip ID = %04X", (uint16_t)(chipid >> 32)); // print High 2 bytes
    // Serial.printf("%08X\n", (uint32_t)chipid);                       // print Low 4bytes.
@@ -74,6 +83,23 @@ void setup()
    if (setup_wifi())
    {
       update();
+   }
+
+   if(protocol == 2) //команда непрерывного вывода веса
+   {
+      uint8_t cmd_set_mode_10[9] = {
+         0xF8, 0x55, 0xCE,  // Header
+         0x00, 0x02,        // Length = 2
+         0x91,              // CMD_TCP_SET_WORK_MODE
+         0x0A,              // Mode 10: Industrial indicator mode
+         0x00, 0x00         // Placeholder for CRC
+     };
+     
+     // Вычисляем CRC-16 по первым 7 байтам
+     uint16_t crc = crc16(cmd_set_mode_10, 7);
+     cmd_set_mode_10[7] = (crc >> 8) & 0xFF;  // CRC High
+     cmd_set_mode_10[8] = crc & 0xFF;         // CRC Low
+     Serial2.write(cmd_set_mode_10, sizeof(cmd_set_mode_10));
    }
 }
 

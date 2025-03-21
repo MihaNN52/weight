@@ -72,3 +72,4 @@ extern bool setup_wifi(void);
 extern void update(void);
 extern bool ini();
 extern void my_progress_callback(size_t progress, size_t size);
+extern uint16_t crc16(const uint8_t* data, uint8_t length);
