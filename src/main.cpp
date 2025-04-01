@@ -35,9 +35,10 @@ void setup()
    pinMode(LED_PIN, OUTPUT);
    Wire.begin();
    Serial.begin(115200);
+  // Serial2.begin(57600, SERIAL_8N1, 16, 17);
    
    Serial.println("[SETUP] Start");
-   
+   Serial2.println("[SETUP] Start2");
    delay(1000);
    digitalWrite(LED_PIN, HIGH);
    delay(3000);
@@ -51,8 +52,10 @@ void setup()
    if(protocol == 2)
    {
       Serial2.begin(57600);
+      Serial.println("0000000000000000000000");
    }
    Serial2.println("[SETUP] Start2");
+   
    uint64_t chipid = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
    // Serial.printf("ESP32 Chip ID = %04X", (uint16_t)(chipid >> 32)); // print High 2 bytes
    // Serial.printf("%08X\n", (uint32_t)chipid);                       // print Low 4bytes.
@@ -84,10 +87,10 @@ void setup()
    {
       update();
    }
-
+/*
    if(protocol == 2) //команда непрерывного вывода веса
    {
-      uint8_t cmd_set_mode_10[9] = {
+      uint8_t cmd_set_mode_10[] = {
          0xF8, 0x55, 0xCE,  // Header
          0x00, 0x02,        // Length = 2
          0x91,              // CMD_TCP_SET_WORK_MODE
@@ -100,7 +103,9 @@ void setup()
      cmd_set_mode_10[7] = (crc >> 8) & 0xFF;  // CRC High
      cmd_set_mode_10[8] = crc & 0xFF;         // CRC Low
      Serial2.write(cmd_set_mode_10, sizeof(cmd_set_mode_10));
+     Serial.print("111111111111111111111111");
    }
+     */
 }
 
 void loop()
@@ -117,7 +122,7 @@ void loop()
    if (millis() - timer_2 > 3000)
    {
       timer_2 = millis();
-      if (millis() - time_message_weight < 9000)
+      if (millis() - time_message_weight < 6000)
       {
          
          digitalWrite(LED_PIN, HIGH);
@@ -135,8 +140,5 @@ void loop()
    {
       timer_3 = millis();
    }
-   if (millis() - timer_4 > 60000)
-   {
-      timer_4 = millis();
-   }
+   
 }
