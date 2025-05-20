@@ -202,7 +202,7 @@ bool ini()
 
     StaticJsonDocument<900> doc;
 
-    doc["mac"] = ESP.getEfuseMac(); //WiFi.macAddress();
+    doc["mac"] = WiFi.macAddress(); //WiFi.macAddress();
     doc["type"] = device_name;
     doc["protocol"] = protocol;
     doc["mode"] = mode;

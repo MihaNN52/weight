@@ -1,11 +1,11 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 1;
+uint16_t ver = 3;
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
-const char *ssid = "protonupdate";
-const char *password = "agatproton";
+const char *ssid = "proyagodu";
+const char *password = "1234567890";
 String device_name = "weigher";
 esp32FOTA otg(device_name, ver);
 
@@ -53,6 +53,10 @@ void setup()
    {
       Serial2.begin(57600);
       Serial.println("0000000000000000000000");
+   }
+   if(protocol == 3)
+   {
+      Serial2.begin(9600);
    }
    Serial2.println("[SETUP] Start2");
    

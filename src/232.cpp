@@ -89,7 +89,6 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
         {
             String message = "";
             uint8_t inChar = 0;
-            ;
             char buf[60] = {0};
             uint8_t buf_len = 0;
 
@@ -154,7 +153,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                     // 2000 =3.627
                     Serial.print("[232] Power:");
                     Serial.println(val);
-                    val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
+                    val = maps(val, 1959.0, 2390.0, 3.542, 4.287);
 
                     String uid = "weight_" + String(UID);
                     message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
@@ -371,6 +370,111 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 Serial.println(message_bt);
                 message_last = message;
                 weght_last = weght;
+            }
+        }
+
+        if (mode == 1 && protocol == 3) // Атол Марта. такой же как протокол первых весов но питание отличается и еще вес шлет много раз подряд
+        {
+            String message = "";
+            uint8_t inChar = 0;
+            char buf[60] = {0};
+            uint8_t buf_len = 0;
+
+            while (Serial2.available() > 0)
+            {
+
+                inChar = Serial2.read();
+                //Serial.print(inChar, HEX);
+                //Serial.print(" ");
+
+                if (buf_len)
+                {
+                    buf[buf_len] = inChar;
+                    buf_len++;
+                }
+                if (!buf_len && inChar && (inChar == 0x01 || inChar == 0x20 || inChar == 0x2D))
+                {
+                    buf[buf_len] = inChar;
+                    buf_len++;
+                }
+
+                if (buf_len > 25)
+                    break;
+                // delay(1);
+                delayMicroseconds(800);
+            }
+            if (!buf_len)
+                return false;
+                
+            
+            // протокол весов Атол Марта
+            if (buf[0] == 0x01  && buf[1] == 0x02 && buf[2] == 0x55 && (buf[3] == 0x20 ||buf[3] == 0x2D ))
+            {
+                if (millis() - time_message_weight < 1000)
+                {
+                    return false;
+                }
+                message += buf[4];
+                message += buf[5];
+                message += buf[6];
+                message += buf[7];
+                message += buf[8];
+                message += buf[9];
+                weght = message.toFloat();
+
+                if (buf[3] == 0x2D){
+                    weght = weght * -1; 
+                    Serial.println("------------------------weight");
+                }
+
+
+
+                if (weght >= weght_last_2 && weght - weght_last_2 < 0.015)
+                { // message_last == message
+
+                    count++;
+                    time_count = millis();
+                     Serial.println("11111111111111111111");
+                }
+                if (weght_last_2 >= weght && weght_last_2 - weght < 0.015)
+                { // message_last == message
+
+                    count++;
+                    time_count = millis();
+                    Serial.println("2222222222222222222222");
+                }
+
+                weght_last_2 = weght;
+                if (millis() - time_count > 300)
+                    count = 0;
+
+                if (count < 5)
+                    return 0;
+                else
+                    count = 0;
+
+                if (weght == weght_last && millis() - time_message_weight < 1000){
+                Serial.println("33333333333333333333");
+                    return 0;
+                }
+
+                float val = 0;
+                val = analogRead(POW);
+                // 2390 = 4.261
+                // 1397 =2.608
+                // 2000 =3.627
+                Serial.print("[232] Power:");
+                Serial.println(val);
+                val = maps(val, 1959.0, 2515.0, 3.542, 4.285);
+
+                String uid = "weight_" + String(UID);
+                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
+                time_message_weight = millis();
+                Serial.print("[232] message_bt3:");
+                Serial.println(message_bt);
+                message_last = message;
+                weght_last = weght;
+                return true;
             }
         }
         return false;
