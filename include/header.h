@@ -51,6 +51,11 @@ extern String message_bt;
 extern long long time_message_weight;      
 extern String CHIPID; 
 
+extern uint16_t power_low;
+extern uint16_t power_hight;
+extern uint16_t power_low_volt;
+extern uint16_t power_hight_volt;
+
 
 
 

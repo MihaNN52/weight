@@ -1,12 +1,16 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 7;
+uint16_t ver = 8;
+bool sleeep_off = false;// для тестирования батариеи ПОСТАВИТЬ FALSE!!!!
+
+
+
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
 const char *ssid = "proyagodu";
 const char *password = "1234567890";
-String device_name = "weight_mini_2026";//weigher  до 6 версии - замена резисторов для замера напряжения питания
+String device_name = "weigher"; // weigher  до 6 версии - замена резисторов для замера напряжения питания
 esp32FOTA otg(device_name, ver);
 
 bool flag_led = false;
@@ -18,8 +22,10 @@ long long timer_4 = 0;
 long long timer_5 = 0;
 long long time_232 = 0;
 
+
+
 uint8_t mode = 1;
-uint8_t protocol = 1;
+uint8_t protocol = 3;
 uint16_t UID = 0; // Номер 4
 String message_bt = "";
 String message_last = "";
@@ -31,37 +37,39 @@ uint8_t count = 0;
 long long time_count = 0;
 float weght_last_2 = 0;
 
+uint16_t power_low = 0;
+uint16_t power_hight = 0;
+uint16_t power_low_volt = 0;
+uint16_t power_hight_volt = 0;
+
+
 void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Wire.begin();
    Serial.begin(115200);
-  // Serial2.begin(57600, SERIAL_8N1, 16, 17);
+   // Serial2.begin(57600, SERIAL_8N1, 16, 17);
 
-   
    Serial.println("[SETUP] Start");
    Serial2.println("[SETUP] Start2");
-   delay(1000);
-   digitalWrite(LED_PIN, HIGH);
-   delay(3000);
-   digitalWrite(LED_PIN, LOW);
+
    time_232 = millis() + 10000; // время ожидания +10 сек
    eepromIni();
-   if(protocol == 1)
+   if (protocol == 1)
    {
       Serial2.begin(9600);
    }
-   if(protocol == 2)
+   if (protocol == 2)
    {
       Serial2.begin(57600);
       Serial.println("0000000000000000000000");
    }
-   if(protocol == 3)
+   if (protocol == 3)
    {
       Serial2.begin(9600);
    }
    Serial2.println("[SETUP] Start2");
-   
+
    uint64_t chipid = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
    // Serial.printf("ESP32 Chip ID = %04X", (uint16_t)(chipid >> 32)); // print High 2 bytes
    // Serial.printf("%08X\n", (uint32_t)chipid);                       // print Low 4bytes.
@@ -81,38 +89,62 @@ void setup()
    // printf("%x\n", id_6);
    CHIPID = String(id_6, HEX) + ":" + String(id_5, HEX) + ":" + String(id_4, HEX) + ":" + String(id_3, HEX) + ":" + String(id_2, HEX) + ":" + String(id_1, HEX) + "_";
 
+
+
+   float val = 0;
+      val = analogRead(POW);
+      val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+      Serial.print("[SETUP] Power volt:");
+      Serial.println(val);
+      if(val <= power_low_volt/100.0 && !sleeep_off ){
+         Serial.print("[SETUP] Sleep low power");
+         esp_sleep_enable_timer_wakeup(40 * 1000000);
+         esp_deep_sleep_start();
+      }
+
    String uid = "WEIGHT_" + CHIPID + String(UID);
    SerialBT.begin(uid);
    Serial.print("[SETUP] BT Name:");
    Serial.println(uid);
 
-   otg.setProgressCb(my_progress_callback);
-   otg.setManifestURL(manifest_url);
-   otg.printConfig();
-   if (setup_wifi())
+   if (val >= (power_low_volt/100.0 + 0.05) || sleeep_off)
    {
-      update();
-      WiFi.mode(WIFI_OFF);
-   }
-/*
-   if(protocol == 2) //команда непрерывного вывода веса
-   {
-      uint8_t cmd_set_mode_10[] = {
-         0xF8, 0x55, 0xCE,  // Header
-         0x00, 0x02,        // Length = 2
-         0x91,              // CMD_TCP_SET_WORK_MODE
-         0x0A,              // Mode 10: Industrial indicator mode
-         0x00, 0x00         // Placeholder for CRC
-     };
-     
-     // Вычисляем CRC-16 по первым 7 байтам
-     uint16_t crc = crc16(cmd_set_mode_10, 7);
-     cmd_set_mode_10[7] = (crc >> 8) & 0xFF;  // CRC High
-     cmd_set_mode_10[8] = crc & 0xFF;         // CRC Low
-     Serial2.write(cmd_set_mode_10, sizeof(cmd_set_mode_10));
-     Serial.print("111111111111111111111111");
-   }
-     */
+
+      otg.setProgressCb(my_progress_callback);
+      otg.setManifestURL(manifest_url);
+      otg.printConfig();
+      if (setup_wifi())
+      {  ini();
+         update();
+         WiFi.mode(WIFI_OFF);
+      }
+
+         
+
+   } 
+   digitalWrite(LED_PIN, HIGH);
+   delay(3000);
+   digitalWrite(LED_PIN, LOW);
+
+   /*
+      if(protocol == 2) //команда непрерывного вывода веса
+      {
+         uint8_t cmd_set_mode_10[] = {
+            0xF8, 0x55, 0xCE,  // Header
+            0x00, 0x02,        // Length = 2
+            0x91,              // CMD_TCP_SET_WORK_MODE
+            0x0A,              // Mode 10: Industrial indicator mode
+            0x00, 0x00         // Placeholder for CRC
+        };
+
+        // Вычисляем CRC-16 по первым 7 байтам
+        uint16_t crc = crc16(cmd_set_mode_10, 7);
+        cmd_set_mode_10[7] = (crc >> 8) & 0xFF;  // CRC High
+        cmd_set_mode_10[8] = crc & 0xFF;         // CRC Low
+        Serial2.write(cmd_set_mode_10, sizeof(cmd_set_mode_10));
+        Serial.print("111111111111111111111111");
+      }
+        */
 }
 
 void loop()
@@ -122,9 +154,9 @@ void loop()
 
    delay(50);
 
-   if(millis() - time_232 > 15000)
+   if (millis() - time_232 > 15000)
    {
-      if(protocol == 1 || protocol == 2)
+      if (protocol == 1 || protocol == 2)
       {
          Serial.println("[LOOP] Sleep 40 sec");
          digitalWrite(LED_PIN, HIGH);
@@ -143,16 +175,15 @@ void loop()
    if (millis() - timer_2 > 3000)
    {
       timer_2 = millis();
-      
+
       if (millis() - time_message_weight < 6000)
       {
-         
+
          digitalWrite(LED_PIN, HIGH);
          SerialBT.println(message_bt);
          Serial.println("[LOOP] message_bt");
          delay(200);
          digitalWrite(LED_PIN, LOW);
-         
       }
       else
          digitalWrite(LED_PIN, LOW);
@@ -162,6 +193,33 @@ void loop()
    {
       timer_3 = millis();
       Serial.println("[LOOP] ...");
+
+      float val = 0;
+      val = analogRead(POW);
+      val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+      if(val <= power_low_volt/100.0 && !sleeep_off){
+         Serial.print("[POWER] Sleep low power");
+         esp_sleep_enable_timer_wakeup(40 * 1000000);
+         esp_deep_sleep_start();
+      }
+
+
+      if (millis() < 120000)
+      {
+         float val_1 = 0;
+         val_1 = analogRead(POW);
+         Serial.print("[POWER] Power acp:");
+         Serial.println(val_1);
+         val_1 = maps(val_1, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+         Serial.print("[POWER] Power volt:");
+         Serial.println(val_1);
+
+         
+         if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
+            val_1 = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+            Serial.print("[POWER] Power volt 3.7-4.2 variant:");
+            Serial.println(val_1);
+         }
+      }
    }
-   
 }

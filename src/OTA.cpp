@@ -57,7 +57,8 @@ bool setup_wifi()
         delay(1000);
         digitalWrite(LED_PIN, HIGH);
         delay(1000);
-        digitalWrite(LED_PIN, LOW);\
+        digitalWrite(LED_PIN, LOW);
+        
         
          return true; // Завершаем поиск после подключения
       }
@@ -126,7 +127,7 @@ void my_progress_callback(size_t progress, size_t size)
 
 void update()
 {
-  ini();
+  
   bool updatedNeeded = otg.execHTTPcheck();
 
   if (updatedNeeded)
@@ -243,6 +244,48 @@ bool ini()
       if (x != protocol)
         restart = true;
     }
+    
+    if (doc["power_low"])
+    {
+      uint16_t x = doc["power_low"];
+      eepromWrite(x >> 8, 0, 4);
+      eepromWrite(x, 0, 5);
+      Serial.printf("[INI] power_low = %d\n", x);
+      if (x != power_low)
+        restart = true;
+    }
+
+    if (doc["power_hight"])
+    {
+      uint16_t x = doc["power_hight"];
+      eepromWrite(x >> 8, 0, 6);
+      eepromWrite(x, 0, 7);
+      delay(100);
+      Serial.printf("[INI] power_hight = %d\n", x);
+      if (x != power_hight)
+        restart = true;
+    }
+
+    if (doc["power_low_volt"])
+    {
+      uint16_t x = doc["power_low_volt"];
+      eepromWrite(x >> 8, 0, 8);
+      eepromWrite(x, 0, 9);
+      Serial.printf("[INI] power_low_volt = %d\n", x);
+      if (x != power_low_volt)
+        restart = true;
+    }
+
+    if (doc["power_hight_volt"])
+    {
+      uint16_t x = doc["power_hight_volt"];
+      eepromWrite(x >> 8, 0, 10);
+      eepromWrite(x, 0, 11);
+      delay(100);
+      Serial.printf("[INI] power_hight_volt = %d\n", x);
+      if (x != power_hight_volt)
+        restart = true;
+    }
 
     if (doc["type"])
     {
@@ -277,6 +320,12 @@ bool ini()
     doc["mode"] = mode;
     doc["uid"] = UID;
     doc["ver"] = ver;
+    doc["power_low"] = power_low;
+    doc["power_hight"] = power_hight;
+    doc["power_low_volt"] = power_low_volt;
+    doc["power_hight_volt"] = power_hight_volt;
+    
+
 
     str = "";
     serializeJson(doc, str);

@@ -66,21 +66,34 @@ bool eepromIni(){
     Serial.println("");
     Serial.print("[EEPROM] Version:");Serial.println(ver);
     mode = eepromRead(0, 0);
+    if(mode == 255) mode = 1;
     Serial.print("[EEPROM] Mode:");Serial.println(mode);
   
     UID = (eepromRead(0, 1) << 8) + eepromRead(0, 2);
+    if(UID == 65535) UID = 1;
     Serial.print("[EEPROM] UID:");Serial.println(UID);
     
     protocol = eepromRead(0, 3);
+    if(protocol == 255) protocol = 3;
     Serial.print("[EEPROM] Protocol:");  Serial.println(protocol);
-    if(protocol == 255){
-  
-          protocol = 1;
-          eepromWrite(protocol, 0, 15);
-          Serial.print(F("[EEPROM] New Protocol:"));
-          Serial.println(protocol);
-    }
-  
+    
+    power_low = (eepromRead(0, 4) << 8) + eepromRead(0, 5);
+    if(power_low < 300 || power_low > 4100  ) power_low = 2256;
+    Serial.print("[EEPROM] Power_LOW:");Serial.println(power_low);
+
+
+    power_hight =(eepromRead(0, 6) << 8) + eepromRead(0, 7);
+    if(power_hight < 300 || power_hight > 30000) power_hight = 3783;
+    Serial.print("[EEPROM] Power_HIGHT:");Serial.println(power_hight);
+
+    power_low_volt = (eepromRead(0, 8) << 8) + eepromRead(0, 9);
+    if(power_low_volt < 300|| power_low_volt > 26000  ) power_low_volt = 390;
+    Serial.print("[EEPROM] Power_LOW VOLT:");Serial.println(power_low_volt);
+    
+
+    power_hight_volt = (eepromRead(0, 10) << 8) + eepromRead(0, 11);
+    if(power_hight_volt < 300 || power_hight_volt > 26000  ) power_hight_volt = 420;
+    Serial.print("[EEPROM] Power_HIGHT VOLT:");Serial.println(power_hight_volt);
   
   return true;
   

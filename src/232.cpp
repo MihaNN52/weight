@@ -5,8 +5,7 @@ float maps(float x, float in_min, float in_max, float out_min, float out_max)
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-uint16_t crc16(uint8_t *buf, uint16_t len)
-    {
+uint16_t crc16(uint8_t *buf, uint16_t len){
         unsigned short bits, k, a, temp;
         uint16_t crc = 0;
         for (k = 4; k < len; k++)
@@ -155,7 +154,10 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                     // 2000 =3.627
                     Serial.print("[232] Power:");
                     Serial.println(val);
-                    val = maps(val, 1959.0, 2390.0, 3.542, 4.287);
+                    val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+                    if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
+                       val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+                    }
                     String uid = "weight_" + String(UID);
                     message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
                     time_message_weight = millis();
@@ -235,7 +237,10 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 // 2000 =3.627
                 Serial.print("[232] Power:");
                 Serial.println(val);
-                val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
+                val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+                if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
+                    val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+                }
                 
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
@@ -247,6 +252,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 return true;
             }
         }
+
         // протокол весов МассаК Вилка  RX 3 TX 2 Масса 5 РАЗЬЕМ нашего провода МАМА
         // 0xF8,0x55, 0xCE,0x01,0x00,0xA0,0xD5,0x40
         if (mode == 1 && protocol == 2 && millis() - timer_4 > 1500) 
@@ -363,7 +369,10 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 // 2000 =3.627
                 Serial.print("[232] Power:");
                 Serial.println(val);
-                val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
+                val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+                if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
+                   val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+                }
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
                 time_message_weight = millis();
@@ -467,7 +476,10 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 // 2000 =3.627
                 Serial.print("[232] Power:");
                 Serial.println(val);
-                val = maps(val, 1959.0, 2515.0, 3.542, 4.285);
+                val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+                if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
+                    val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+                }
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
                 time_message_weight = millis();
