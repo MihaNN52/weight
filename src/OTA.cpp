@@ -2,6 +2,71 @@
 
 bool setup_wifi()
 {
+
+  Serial.println("Scanning networks...");
+  int n = WiFi.scanNetworks();
+  if (n == 0)
+  {
+    Serial.println("No networks found");
+  }
+  else
+  {
+    Serial.print(n);
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i)
+    {
+      Serial.printf("%d: %s (%d) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "open" : "encrypted");
+      if (strcmp(WiFi.SSID(i).c_str(), ssid) == 0)
+      {
+        Serial.print("Found target network: ");
+        Serial.println(ssid);
+        Serial.print("Connecting to ");
+        Serial.println(ssid);
+        WiFi.begin(ssid, password);
+        uint8_t val = 20;
+        while (WiFi.status() != WL_CONNECTED && val--)
+        {
+          delay(1000);
+          Serial.print(".");
+        }
+        Serial.println("");
+        Serial.println("WiFi connected");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("[WiFi] Hostname: ");
+        Serial.println(WiFi.getHostname());
+
+        Serial.print("[WiFi] ESP Mac Address: ");
+        Serial.println(WiFi.macAddress());
+
+        Serial.print("[WiFi] Subnet Mask: ");
+        Serial.println(WiFi.subnetMask());
+
+        Serial.print("[WiFi] Gateway IP: ");
+        Serial.println(WiFi.gatewayIP());
+        Serial.print("[WiFi] DNS: ");
+        Serial.println(WiFi.dnsIP());
+
+        digitalWrite(LED_PIN, HIGH);
+        delay(1000);
+        digitalWrite(LED_PIN, LOW);
+        delay(1000);
+        digitalWrite(LED_PIN, HIGH);
+        delay(1000);
+        digitalWrite(LED_PIN, LOW);
+        delay(1000);
+        digitalWrite(LED_PIN, HIGH);
+        delay(1000);
+        digitalWrite(LED_PIN, LOW);\
+        
+         return true; // Завершаем поиск после подключения
+      }
+      delay(10);
+    }
+  }
+  /*
+  return false;
+
   delay(1000);
   WiFi.mode(WIFI_STA);
   Serial.print("[WiFi] Connecting to WiFi");
@@ -31,19 +96,20 @@ bool setup_wifi()
     Serial.print("[WiFi] DNS: ");
     Serial.println(WiFi.dnsIP());
 
-    digitalWrite(LED_PIN,HIGH);
+    digitalWrite(LED_PIN, HIGH);
     delay(1000);
-    digitalWrite(LED_PIN,LOW);
+    digitalWrite(LED_PIN, LOW);
     delay(1000);
-    digitalWrite(LED_PIN,HIGH);
+    digitalWrite(LED_PIN, HIGH);
     delay(1000);
-    digitalWrite(LED_PIN,LOW);
+    digitalWrite(LED_PIN, LOW);
     delay(1000);
-    digitalWrite(LED_PIN,HIGH);
+    digitalWrite(LED_PIN, HIGH);
     delay(1000);
-    digitalWrite(LED_PIN,LOW);
+    digitalWrite(LED_PIN, LOW);
     return true;
   }
+    */
   Serial.println(" ");
   Serial.println("[WiFi] No Internet");
   return false;
@@ -54,7 +120,7 @@ void my_progress_callback(size_t progress, size_t size)
   if (progress == size || progress == 0)
     Serial.println();
   Serial.print(".");
-  digitalWrite(LED_PIN,flag_led);
+  digitalWrite(LED_PIN, flag_led);
   flag_led = !flag_led;
 }
 
@@ -155,7 +221,8 @@ bool ini()
       uint8_t x = doc["mode"];
       eepromWrite(x, 0, 0);
       Serial.printf("[INI] Mode = %d\n", x);
-      if(x != mode)restart = true;
+      if (x != mode)
+        restart = true;
     }
 
     if (doc["uid"])
@@ -164,7 +231,8 @@ bool ini()
       eepromWrite(x >> 8, 0, 1);
       eepromWrite(x, 0, 2);
       Serial.printf("[INI] UID = %d\n", x);
-      if(x != UID)restart = true;
+      if (x != UID)
+        restart = true;
     }
 
     if (doc["protocol"])
@@ -172,7 +240,8 @@ bool ini()
       uint16_t x = doc["protocol"];
       eepromWrite(x, 0, 3);
       Serial.printf("[INI] protocol = %d\n", x);
-      if(x != protocol)restart = true;
+      if (x != protocol)
+        restart = true;
     }
 
     if (doc["type"])
@@ -202,7 +271,7 @@ bool ini()
 
     StaticJsonDocument<900> doc;
 
-    doc["mac"] = WiFi.macAddress(); //WiFi.macAddress();
+    doc["mac"] = WiFi.macAddress(); // WiFi.macAddress();
     doc["type"] = device_name;
     doc["protocol"] = protocol;
     doc["mode"] = mode;

@@ -1,12 +1,12 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 3;
+uint16_t ver = 7;
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
 const char *ssid = "proyagodu";
 const char *password = "1234567890";
-String device_name = "weigher";
+String device_name = "weight_mini_2026";//weigher  до 6 версии - замена резисторов для замера напряжения питания
 esp32FOTA otg(device_name, ver);
 
 bool flag_led = false;
@@ -17,6 +17,7 @@ long long timer_3 = 0;
 long long timer_4 = 0;
 long long timer_5 = 0;
 long long time_232 = 0;
+
 uint8_t mode = 1;
 uint8_t protocol = 1;
 uint16_t UID = 0; // Номер 4
@@ -36,6 +37,7 @@ void setup()
    Wire.begin();
    Serial.begin(115200);
   // Serial2.begin(57600, SERIAL_8N1, 16, 17);
+
    
    Serial.println("[SETUP] Start");
    Serial2.println("[SETUP] Start2");
@@ -43,7 +45,7 @@ void setup()
    digitalWrite(LED_PIN, HIGH);
    delay(3000);
    digitalWrite(LED_PIN, LOW);
-
+   time_232 = millis() + 10000; // время ожидания +10 сек
    eepromIni();
    if(protocol == 1)
    {
@@ -90,6 +92,7 @@ void setup()
    if (setup_wifi())
    {
       update();
+      WiFi.mode(WIFI_OFF);
    }
 /*
    if(protocol == 2) //команда непрерывного вывода веса
@@ -119,6 +122,20 @@ void loop()
 
    delay(50);
 
+   if(millis() - time_232 > 15000)
+   {
+      if(protocol == 1 || protocol == 2)
+      {
+         Serial.println("[LOOP] Sleep 40 sec");
+         digitalWrite(LED_PIN, HIGH);
+         delay(3000);
+         digitalWrite(LED_PIN, LOW);
+         time_232 = millis();
+         esp_sleep_enable_timer_wakeup(40 * 1000000);
+         esp_deep_sleep_start();
+      }
+   }
+
    if (millis() - timer_1 > 500)
    {
       timer_1 = millis();
@@ -126,6 +143,7 @@ void loop()
    if (millis() - timer_2 > 3000)
    {
       timer_2 = millis();
+      
       if (millis() - time_message_weight < 6000)
       {
          
@@ -140,9 +158,10 @@ void loop()
          digitalWrite(LED_PIN, LOW);
    }
 
-   if (millis() - timer_3 > 10000)
+   if (millis() - timer_3 > 5000)
    {
       timer_3 = millis();
+      Serial.println("[LOOP] ...");
    }
    
 }

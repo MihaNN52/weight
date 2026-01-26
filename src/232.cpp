@@ -60,7 +60,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
             }
             if (!buf_len)
                 return false;
-
+            time_232 = millis();
             if (millis() - time_message_weight < 3000)
             {
                 return false;
@@ -78,7 +78,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                     message += ", ";
                 }
             }
-
+            time_232 = millis();
             String uid = "weight_" + String(UID);
             message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + "}";
             time_message_weight = millis();
@@ -117,6 +117,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
             }
             if (!buf_len)
                 return false;
+            time_232 = millis();
             /*
                     Serial.print("[232]PASKET IN: ");
                     for (uint8_t i = 0; i <= buf_len; i++)
@@ -130,10 +131,11 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
             // Serial.println(buf_len);
             // протокол первых весов
             if (buf[0] == 0x01 && buf[1] == 0x02 && buf[2] == 0x53 && buf[3] == 0x20)
+                
             {
                 if (buf[6] == 0x2e && buf[4] >= 0x30 && buf[4] <= 0x39 && buf[5] >= 0x30 && buf[5] <= 0x39 && buf[7] >= 0x30 && buf[7] <= 0x39 && buf[8] >= 0x30 && buf[8] <= 0x39 && buf[9] >= 0x30 && buf[9] <= 0x39)
                 {
-
+                    
                     if (buf[4] == 0x30 && buf[5] == 0x30 && buf[7] == 0x30 && buf[8] == 0x30 && buf[9] == 0x30)
                     {
                         return false;
@@ -154,7 +156,6 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                     Serial.print("[232] Power:");
                     Serial.println(val);
                     val = maps(val, 1959.0, 2390.0, 3.542, 4.287);
-
                     String uid = "weight_" + String(UID);
                     message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
                     time_message_weight = millis();
@@ -166,7 +167,8 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
             }
             // протокол первых весов CAS 60
             if ((buf[0] == 0x20 || buf[0] == 0x2D) && buf[1] == 0x20 && buf[10] == 0x0D && buf[11] == 0x0A)
-            {
+            {  
+                
                 if (millis() - time_message_weight < 3000)
                 {
                     return false;
@@ -234,7 +236,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 Serial.print("[232] Power:");
                 Serial.println(val);
                 val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
-
+                
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
                 time_message_weight = millis();
@@ -287,7 +289,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 return false;
             if (!buf_len)
                 return false;
-
+            time_232 = millis();
             if (millis() - time_message_weight < 3000)
             {
                 return false;
@@ -344,7 +346,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 weght = rounded_weight / 1000.0;
                 printf("Вес: %d г (округлён до деления %d г): %d г\n", weight, division_step, rounded_weight);
                 
-
+                
                 //Serial.print("[232] Weight:");
                 //Serial.println(weght);
                 //Serial.print("[232] weght_last:");
@@ -362,7 +364,6 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 Serial.print("[232] Power:");
                 Serial.println(val);
                 val = maps(val, 1959.0, 2390.0, 3.542, 4.261);
-
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
                 time_message_weight = millis();
@@ -410,6 +411,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
             // протокол весов Атол Марта
             if (buf[0] == 0x01  && buf[1] == 0x02 && buf[2] == 0x55 && (buf[3] == 0x20 ||buf[3] == 0x2D ))
             {
+                
                 if (millis() - time_message_weight < 1000)
                 {
                     return false;
@@ -466,7 +468,6 @@ uint16_t crc16(uint8_t *buf, uint16_t len)
                 Serial.print("[232] Power:");
                 Serial.println(val);
                 val = maps(val, 1959.0, 2515.0, 3.542, 4.285);
-
                 String uid = "weight_" + String(UID);
                 message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
                 time_message_weight = millis();
