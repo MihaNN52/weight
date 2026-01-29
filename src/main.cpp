@@ -2,10 +2,10 @@
 HTTPClient http;
 
 uint16_t ver = 8;
-bool sleeep_off = false;// для тестирования батариеи ПОСТАВИТЬ FALSE!!!!
+bool sleep_off = false;// для тестирования батариеи ПОСТАВИТЬ FALSE в INI файле!!!!
 
 
-
+bool flag_old = false; //флаг который говорит о том что нет в иги файле на сервере данные о напряжении батареии что запрещает сон
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
 const char *ssid = "proyagodu";
@@ -96,7 +96,7 @@ void setup()
       val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
       Serial.print("[SETUP] Power volt:");
       Serial.println(val);
-      if(val <= power_low_volt/100.0 && !sleeep_off ){
+      if(val <= power_low_volt/100.0 && !sleep_off && !flag_old ){
          Serial.print("[SETUP] Sleep low power");
          esp_sleep_enable_timer_wakeup(40 * 1000000);
          esp_deep_sleep_start();
@@ -107,7 +107,7 @@ void setup()
    Serial.print("[SETUP] BT Name:");
    Serial.println(uid);
 
-   if (val >= (power_low_volt/100.0 + 0.05) || sleeep_off)
+   if (val >= (power_low_volt/100.0 + 0.11) || sleep_off)
    {
 
       otg.setProgressCb(my_progress_callback);
@@ -197,14 +197,20 @@ void loop()
       float val = 0;
       val = analogRead(POW);
       val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
-      if(val <= power_low_volt/100.0 && !sleeep_off){
+      if(val <= power_low_volt/100.0 && !sleep_off && !flag_old){
          Serial.print("[POWER] Sleep low power");
          esp_sleep_enable_timer_wakeup(40 * 1000000);
          esp_deep_sleep_start();
       }
 
+      if(val <= 3.9 && !sleep_off){
+         Serial.print("[POWER] Sleep low power.");
+         esp_sleep_enable_timer_wakeup(40 * 1000000);
+         esp_deep_sleep_start();
+      }
 
-      if (millis() < 120000)
+
+      if (millis() < 180000)
       {
          float val_1 = 0;
          val_1 = analogRead(POW);

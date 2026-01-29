@@ -44,7 +44,7 @@ extern float weght;
 extern float weght_last;
 extern uint8_t count;
 extern float weght_last_2;
-
+extern bool sleep_off;
        
 extern uint16_t UID; 
 extern String message_bt;
@@ -55,6 +55,7 @@ extern uint16_t power_low;
 extern uint16_t power_hight;
 extern uint16_t power_low_volt;
 extern uint16_t power_hight_volt;
+extern bool flag_old;
 
 
 

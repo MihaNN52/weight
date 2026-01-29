@@ -286,6 +286,15 @@ bool ini()
       if (x != power_hight_volt)
         restart = true;
     }
+    
+    if (doc["sleep_off"])// 0 = 255 1 = 1
+    {
+      uint8_t x = doc["sleep_off"];
+      eepromWrite(x, 0, 12);
+      delay(100);
+      Serial.printf("[INI] sleep_off = %d\n", x);
+      if(x == 255) {sleep_off =  false;}else{sleep_off = true;}
+    }
 
     if (doc["type"])
     {
@@ -324,6 +333,7 @@ bool ini()
     doc["power_hight"] = power_hight;
     doc["power_low_volt"] = power_low_volt;
     doc["power_hight_volt"] = power_hight_volt;
+    doc["sleep_off"] = 255;
     
 
 

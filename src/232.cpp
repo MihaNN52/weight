@@ -149,17 +149,18 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
 
                     float val = 0;
                     val = analogRead(POW);
+                    uint16_t acp = val;
                     // 2390 = 4.261
                     // 1397 =2.608
                     // 2000 =3.627
                     Serial.print("[232] Power:");
                     Serial.println(val);
-                    val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+                    val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0); // новый формат
                     if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
-                       val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+                       val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2); // новый фомат при батареи 6 в
                     }
                     String uid = "weight_" + String(UID);
-                    message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + "}";
+                    message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + message + ", \"power\": " + val + ", \"val_power\": " + acp + "}";
                     time_message_weight = millis();
                     Serial.print("[232] message_bt1:");
                     Serial.println(message_bt);
@@ -232,6 +233,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
 
                 float val = 0;
                 val = analogRead(POW);
+                uint16_t acp = val;
                 // 2390 = 4.261
                 // 1397 =2.608
                 // 2000 =3.627
@@ -243,7 +245,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
                 }
                 
                 String uid = "weight_" + String(UID);
-                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
+                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + ", \"val_power\": " + acp + "}";
                 time_message_weight = millis();
                 Serial.print("[232] message_bt2:");
                 Serial.println(message_bt);
@@ -364,6 +366,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
 
                 float val = 0;
                 val = analogRead(POW);
+                uint16_t acp = val;
                 // 2390 = 4.261
                 // 1397 =2.608
                 // 2000 =3.627
@@ -374,7 +377,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
                    val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
                 }
                 String uid = "weight_" + String(UID);
-                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
+                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + ", \"val_power\": " + acp + "}";
                 time_message_weight = millis();
                 Serial.print("[232] message_bt2:");
                 Serial.println(message_bt);
@@ -471,6 +474,7 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
 
                 float val = 0;
                 val = analogRead(POW);
+                uint16_t acp = val;
                 // 2390 = 4.261
                 // 1397 =2.608
                 // 2000 =3.627
@@ -481,7 +485,8 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
                     val = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
                 }
                 String uid = "weight_" + String(UID);
-                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + "}";
+                message_bt = "{\"id\":\"" + CHIPID + uid + "\", \"weight\": " + String(weght, 3) + ", \"power\": " + val + ", \"val_power\": " + acp + "}";
+
                 time_message_weight = millis();
                 Serial.print("[232] message_bt3:");
                 Serial.println(message_bt);
