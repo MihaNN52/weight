@@ -497,3 +497,106 @@ uint16_t crc16(uint8_t *buf, uint16_t len){
         }
         return false;
     }
+
+
+
+
+
+    /*/ protocol = 4  → Ohaus T31 ASCII
+// формат: [sign][ ][weight][ ][unit][ ][?][ ][NET|G|T]\r\n
+
+if (mode == 1 && protocol == 4)
+{
+    char buf[64] = {0};
+    uint8_t len = 0;
+    uint32_t t0 = millis();
+
+    // читаем строку до LF или таймаута
+    while (millis() - t0 < 200)
+    {
+        if (Serial2.available())
+        {
+            char c = Serial2.read();
+            if (len < sizeof(buf) - 1)
+                buf[len++] = c;
+
+            if (c == '\n')
+                break;
+        }
+    }
+
+    if (len < 6)
+        return false;
+
+    // обязательно CRLF
+    if (buf[len - 2] != '\r' || buf[len - 1] != '\n')
+        return false;
+
+    // пример строки:
+    // "  30.21 kg  NET\r\n"
+    // "- 12.00 kg ? NET\r\n"
+
+    char *p = buf;
+
+    // знак
+    bool negative = false;
+    if (*p == '-')
+    {
+        negative = true;
+        p++;
+    }
+    else if (*p == ' ')
+        p++;
+
+    // пропускаем пробелы
+    while (*p == ' ')
+        p++;
+
+    // парсим вес
+    float w = atof(p);
+    if (negative)
+        w = -w;
+
+    if (w == 0.0f)
+        return false;
+
+    // антидребезг по времени
+    if (millis() - time_message_weight < 3000)
+        return false;
+
+    weght = w;
+
+    // питание (как у тебя везде)
+    float val = analogRead(POW);
+    uint16_t acp = val;
+
+    val = maps(val,
+               power_low,
+               power_hight,
+               power_low_volt / 100.0,
+               power_hight_volt / 100.0);
+
+    if (power_low_volt / 100.0 > 5.6 && power_low_volt / 100.0 < 6.0)
+    {
+        val = maps(val,
+                   power_low_volt / 100.0,
+                   power_hight_volt / 100.0,
+                   3.70,
+                   4.2);
+    }
+
+    String uid = "weight_" + String(UID);
+    message_bt =
+        "{\"id\":\"" + CHIPID + uid +
+        "\", \"weight\": " + String(weght, 3) +
+        ", \"power\": " + String(val, 2) +
+        ", \"val_power\": " + String(acp) + "}";
+
+    time_message_weight = millis();
+
+    Serial.print("[232][T31] ");
+    Serial.println(message_bt);
+
+    weght_last = weght;
+    return true;
+}*/
