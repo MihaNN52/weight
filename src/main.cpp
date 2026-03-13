@@ -1,7 +1,7 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 8;
+uint16_t ver = 11;
 bool sleep_off = false;// для тестирования батариеи ПОСТАВИТЬ FALSE в INI файле!!!!
 
 
@@ -24,8 +24,8 @@ long long time_232 = 0;
 
 
 
-uint8_t mode = 1;
-uint8_t protocol = 3;
+uint8_t mode = 1;// 1Весы 2тест для приложения 3 тест для стенда
+uint8_t protocol = 3; // 1 CaS 2 MассаК 3 Атол
 uint16_t UID = 0; // Номер 4
 String message_bt = "";
 String message_last = "";
@@ -96,7 +96,16 @@ void setup()
       val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
       Serial.print("[SETUP] Power volt:");
       Serial.println(val);
-      if(val <= power_low_volt/100.0 && !sleep_off && !flag_old ){
+      
+      Serial.print("[SETUP] power_low_volt/100.0:");
+      Serial.println(power_low_volt/100.0);
+      Serial.print("[SETUP] sleep_off:");
+      Serial.println(sleep_off);
+      Serial.print("[SETUP] flag_old:");
+      Serial.println(flag_old);
+   
+
+      if(val <= (power_low_volt/100.0 - 0.05) && sleep_off && !flag_old ){ // спим напряжение неизкое для работы
          Serial.print("[SETUP] Sleep low power");
          esp_sleep_enable_timer_wakeup(40 * 1000000);
          esp_deep_sleep_start();
@@ -107,7 +116,7 @@ void setup()
    Serial.print("[SETUP] BT Name:");
    Serial.println(uid);
 
-   if (val >= (power_low_volt/100.0 + 0.11) || sleep_off)
+   if (val >= (power_low_volt/100.0 + 0.11) || flag_old)
    {
 
       otg.setProgressCb(my_progress_callback);
@@ -197,18 +206,11 @@ void loop()
       float val = 0;
       val = analogRead(POW);
       val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
-      if(val <= power_low_volt/100.0 && !sleep_off && !flag_old){
+      if(val <= (power_low_volt/100.0 - 0.05) && sleep_off && !flag_old){  // сон по низкому напряжению 
          Serial.print("[POWER] Sleep low power");
          esp_sleep_enable_timer_wakeup(40 * 1000000);
          esp_deep_sleep_start();
       }
-
-      if(val <= 3.9 && !sleep_off){
-         Serial.print("[POWER] Sleep low power.");
-         esp_sleep_enable_timer_wakeup(40 * 1000000);
-         esp_deep_sleep_start();
-      }
-
 
       if (millis() < 180000)
       {

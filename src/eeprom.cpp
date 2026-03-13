@@ -1,10 +1,16 @@
 #include "header.h"
 
+bool eeprom_smail = false;
+
 uint8_t eepromRead(uint8_t block, uint8_t page)
 {                                 // чтение одного байта из памяти
     Wire.beginTransmission(0x50); // B1010xxx 0101 000 0x50 типо адресс 0x57
-    Wire.write(block);            // MSB block
-    Wire.write(page);             // LSB page
+    if (!eeprom_smail)
+    {
+        Wire.write(block);
+    }
+
+    Wire.write(page); // LSB page
     Wire.endTransmission();
     Wire.requestFrom(0x50, 0x1);
     uint8_t eeprom_data_temp = 0;
@@ -12,7 +18,7 @@ uint8_t eepromRead(uint8_t block, uint8_t page)
     {                                   // пока есть, что читать
         eeprom_data_temp = Wire.read(); // получаем байт (как символ)
     }
-    Wire.endTransmission();
+    //Wire.endTransmission();
     delay(5);
     return eeprom_data_temp;
 }
@@ -20,8 +26,9 @@ uint8_t eepromRead(uint8_t block, uint8_t page)
 uint8_t eepromReadSize(uint8_t block, uint8_t page, uint8_t size)
 {                                 // чтение строки из памяти
     Wire.beginTransmission(0x50); // B1010xxx 0101 000 0x50 типо адрес
-    Wire.write(block);            // MSB block
-    Wire.write(page);             // LSB page
+    if (!eeprom_smail)
+        Wire.write(block); // MSB block
+    Wire.write(page);      // LSB page
     Wire.endTransmission();
     Wire.requestFrom(0x50, size);
     uint8_t i = 0;
@@ -39,7 +46,7 @@ uint8_t eepromReadSize(uint8_t block, uint8_t page, uint8_t size)
             break;
         }
     }
-    Wire.endTransmission();
+    //Wire.endTransmission();
     delay(5);
     return *eeprom_data_temp;
     // Serial.print("DATA:");Serial.println(eeprom_data_temp);
@@ -48,8 +55,10 @@ uint8_t eepromReadSize(uint8_t block, uint8_t page, uint8_t size)
 void eepromWrite(uint8_t data, uint8_t block, uint8_t page)
 {
     Wire.beginTransmission(0x50); // B1010xxx 0101 000 0x50 типо адрес
-    Wire.write(block);            // MSB block
-    Wire.write(page);             // LSB page
+    if (!eeprom_smail){
+        Wire.write(block);
+    }
+    Wire.write(page);      // LSB page
     Wire.write(data);
     Wire.endTransmission();
     delay(5);
@@ -68,7 +77,17 @@ bool eepromIni()
     Serial.println(ver);
     mode = eepromRead(0, 0);
     if (mode == 255)
+    {
         mode = 1;
+    }
+
+    if (mode == 0)
+    {
+        eeprom_smail = true;
+        delay(500);
+        Serial.println("[EEPROM] EEPROM 24lC02!!!!!");
+        mode = eepromRead(0, 13);
+    }
     Serial.print("[EEPROM] Mode:");
     Serial.println(mode);
 
@@ -109,7 +128,14 @@ bool eepromIni()
     Serial.println(power_hight_volt);
 
     uint8_t x_sleep_off = eepromRead(0, 12);
-    if(x_sleep_off == 255) {sleep_off =  false;}else{sleep_off = true;}
+    if (x_sleep_off == 255)
+    {
+        sleep_off = false;
+    }
+    else
+    {
+        sleep_off = true;
+    }
     Serial.print("[EEPROM] Sleep off:");
     Serial.println(x_sleep_off);
 
@@ -117,9 +143,8 @@ bool eepromIni()
     if (power_low == 1959 && power_hight == 2390 && power_low_volt == 354 && power_hight_volt == 426)
     {
         flag_old = true;
-        //sleep_off = false;
+        sleep_off = false;
         Serial.println("[EEPROM] Old version < 40");
-
     }
 
     return true;

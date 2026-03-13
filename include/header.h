@@ -56,6 +56,7 @@ extern uint16_t power_hight;
 extern uint16_t power_low_volt;
 extern uint16_t power_hight_volt;
 extern bool flag_old;
+extern bool eeprom_smail;
 
 
 

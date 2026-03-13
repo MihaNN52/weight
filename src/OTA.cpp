@@ -220,7 +220,14 @@ bool ini()
     if (doc["mode"])
     {
       uint8_t x = doc["mode"];
-      eepromWrite(x, 0, 0);
+      if(!eeprom_smail){
+         eepromWrite(x, 0, 0);
+      }else{
+        eepromWrite(x, 0, 13);
+      }
+
+
+      
       Serial.printf("[INI] Mode = %d\n", x);
       if (x != mode)
         restart = true;

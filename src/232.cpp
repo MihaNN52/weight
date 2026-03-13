@@ -34,12 +34,12 @@ bool rs232()
         if (millis() - timer_5 > 5000)
         {
             timer_5 = millis();
-            float x = (millis() / 1000.0) + 0.1;
-            uint8_t packet[12];
+
+            uint8_t packet[16];
 
             // Переводим миллисекунды в секунды
             // Ограничиваем до 99.999, чтобы влезло ровно в 6 символов
-            float sec = millis()/1000.0 + 0.1;
+            float sec = millis() / 1000.0f + 0.1f;
             while (sec >= 100.0f)
             {
                 sec -= 100.0f;
@@ -47,17 +47,17 @@ bool rs232()
 
             // Формируем 6 символов ASCII
             // Примеры:
-            // 1.234  -> " 1.234"
+            // 0.028  -> "00.028"
+            // 1.234  -> "01.234"
             // 12.345 -> "12.345"
-            // 0.500  -> " 0.500"
-            char weightStr[7]; // 6 символов + \0
-            snprintf(weightStr, sizeof(weightStr), "%6.3f", sec);
+            char weightStr[7];
+            snprintf(weightStr, sizeof(weightStr), "%06.3f", sec);
 
-            // Собираем пакет
+            // Собираем пакет Атол Марта
             packet[0] = 0x01;
             packet[1] = 0x02;
-            packet[2] = 0x55;
-            packet[3] = 0x20; // положительное значение
+            packet[2] = 0x55; // 'S' = stable, для нестабильного 0x55
+            packet[3] = 0x20; // положительное значение, для минуса 0x2D
 
             packet[4] = weightStr[0];
             packet[5] = weightStr[1];
@@ -65,17 +65,34 @@ bool rs232()
             packet[7] = weightStr[3];
             packet[8] = weightStr[4];
             packet[9] = weightStr[5];
-            packet[10] = 0x0D;
-            packet[11] = 0x0A;
 
-            // Шлём в Serial2
-            Serial2.write(packet, sizeof(packet));
+            packet[10] = 0x6B; // 'k'
+            packet[11] = 0x67; // 'g'
+
+            // XOR по байтам 2..11
+            packet[12] = 0x00;
+            for (int i = 2; i <= 11; i++)
+            {
+                packet[12] ^= packet[i];
+            }
+
+            // Хвост пакета
+            packet[13] = 0x03;
+            packet[14] = 0x04;
+            packet[15] = 0x00;
+
+            for (int x = 0; x < 18; x++)
+            {
+                // Шлём в Serial2
+                Serial2.write(packet, sizeof(packet));
+                delay(50);
+            }
 
             // Для отладки в обычный Serial
-            Serial.print("[Mode3 tester]Send sec: ");
+            Serial.print("[Mode3 tester] Send sec: ");
             Serial.print(sec, 3);
             Serial.print(" | packet: ");
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 16; i++)
             {
                 if (packet[i] < 0x10)
                     Serial.print("0");
@@ -458,8 +475,8 @@ bool rs232()
         {
 
             inChar = Serial2.read();
-            // Serial.print(inChar, HEX);
-            // Serial.print(" ");
+            //Serial.print(inChar, HEX);
+            //Serial.print(" ");
 
             if (buf_len)
             {
@@ -479,7 +496,7 @@ bool rs232()
         }
         if (!buf_len)
             return false;
-
+        //Serial.println(" ");
         // протокол весов Атол Марта
         if (buf[0] == 0x01 && buf[1] == 0x02 && buf[2] == 0x55 && (buf[3] == 0x20 || buf[3] == 0x2D))
         {
@@ -507,14 +524,14 @@ bool rs232()
 
                 count++;
                 time_count = millis();
-                Serial.println("11111111111111111111");
+                //Serial.println("11111111111111111111");
             }
             if (weght_last_2 >= weght && weght_last_2 - weght < 0.015)
             { // message_last == message
 
                 count++;
                 time_count = millis();
-                Serial.println("2222222222222222222222");
+                //Serial.println("2222222222222222222222");
             }
 
             weght_last_2 = weght;
@@ -528,7 +545,7 @@ bool rs232()
 
             if (weght == weght_last && millis() - time_message_weight < 1000)
             {
-                Serial.println("33333333333333333333");
+                //Serial.println("33333333333333333333");
                 return 0;
             }
 
