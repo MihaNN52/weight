@@ -475,8 +475,8 @@ bool rs232()
         {
 
             inChar = Serial2.read();
-            //Serial.print(inChar, HEX);
-            //Serial.print(" ");
+            // Serial.print(inChar, HEX);
+            // Serial.print(" ");
 
             if (buf_len)
             {
@@ -496,8 +496,8 @@ bool rs232()
         }
         if (!buf_len)
             return false;
-        //Serial.println(" ");
-        // протокол весов Атол Марта
+        // Serial.println(" ");
+        //  протокол весов Атол Марта
         if (buf[0] == 0x01 && buf[1] == 0x02 && buf[2] == 0x55 && (buf[3] == 0x20 || buf[3] == 0x2D))
         {
 
@@ -524,14 +524,14 @@ bool rs232()
 
                 count++;
                 time_count = millis();
-                //Serial.println("11111111111111111111");
+                // Serial.println("11111111111111111111");
             }
             if (weght_last_2 >= weght && weght_last_2 - weght < 0.015)
             { // message_last == message
 
                 count++;
                 time_count = millis();
-                //Serial.println("2222222222222222222222");
+                // Serial.println("2222222222222222222222");
             }
 
             weght_last_2 = weght;
@@ -545,7 +545,7 @@ bool rs232()
 
             if (weght == weght_last && millis() - time_message_weight < 1000)
             {
-                //Serial.println("33333333333333333333");
+                // Serial.println("33333333333333333333");
                 return 0;
             }
 
@@ -570,6 +570,151 @@ bool rs232()
             Serial.println(message_bt);
             message_last = message;
             weght_last = weght;
+            return true;
+        }
+    }
+    if (mode == 1 && protocol == 5) // СКИ-12: 77 6E 30 30 31 32 39 2E 35 6B 67 0D 0A
+    {
+        String message = "";
+        uint8_t inChar = 0;
+        char buf[60] = {0};
+        uint8_t buf_len = 0;
+
+        while (Serial2.available() > 0)
+        {
+            inChar = Serial2.read();
+
+            // Serial.print(inChar, HEX);
+            // Serial.print(" ");
+
+            if (buf_len)
+            {
+                buf[buf_len] = inChar;
+                buf_len++;
+            }
+
+            if (!buf_len && inChar == 0x77)
+            {
+                buf[buf_len] = inChar;
+                buf_len++;
+            }
+
+            if (buf_len > 25)
+                break;
+
+            delayMicroseconds(800);
+        }
+
+        if (!buf_len)
+            return false;
+
+        time_232 = millis();
+
+        if (buf_len >= 13 &&
+            buf[0] == 0x77 &&
+            buf[1] == 0x6E &&
+            (buf[2] == 0x2D ||
+             (buf[2] >= 0x30 && buf[2] <= 0x39)) &&
+            buf[3] >= 0x30 && buf[3] <= 0x39 &&
+            buf[4] >= 0x30 && buf[4] <= 0x39 &&
+            buf[5] >= 0x30 && buf[5] <= 0x39 &&
+            buf[6] >= 0x30 && buf[6] <= 0x39 &&
+            buf[7] == 0x2E &&
+            buf[8] >= 0x30 && buf[8] <= 0x39 &&
+            buf[9] == 0x6B &&
+            buf[10] == 0x67 &&
+            buf[11] == 0x0D &&
+            buf[12] == 0x0A)
+        {
+            // Если вес передан с минусом, считаем его нулём
+            if (buf[2] == 0x2D)
+            {
+                weght = 0.0;
+            }
+            else
+            {
+                message += buf[2];
+                message += buf[3];
+                message += buf[4];
+                message += buf[5];
+                message += buf[6];
+                message += buf[7];
+                message += buf[8];
+
+                weght = message.toFloat();
+            }
+
+            // Проверка стабильности по примеру протокола Атол
+            if (weght >= weght_last_2 &&
+                weght - weght_last_2 < 0.55)
+            {
+                count++;
+                time_count = millis();
+            }
+
+            if (weght_last_2 >= weght &&
+                weght_last_2 - weght < 0.55)
+            {
+                count++;
+                time_count = millis();
+            }
+
+            weght_last_2 = weght;
+
+            if (millis() - time_count > 300)
+                count = 0;
+
+            if (count < 5)
+                return false;
+            else
+                count = 0;
+
+            if (weght == weght_last &&
+                millis() - time_message_weight < 1000)
+            {
+                return false;
+            }
+
+            float val = 0;
+            val = analogRead(POW);
+            uint16_t acp = val;
+
+            Serial.print("[232] Power:");
+            Serial.println(val);
+
+            val = maps(
+                val,
+                power_low,
+                power_hight,
+                power_low_volt / 100.0,
+                power_hight_volt / 100.0);
+
+            if (power_low_volt / 100.0 > 5.6 &&
+                power_low_volt / 100.0 < 6.0)
+            {
+                val = maps(
+                    val,
+                    power_low_volt / 100.0,
+                    power_hight_volt / 100.0,
+                    3.70,
+                    4.2);
+            }
+
+            String uid = "weight_" + String(UID);
+
+            message_bt =
+                "{\"id\":\"" + CHIPID + uid +
+                "\", \"weight\": " + String(weght, 3) +
+                ", \"power\": " + val +
+                ", \"val_power\": " + acp + "}";
+
+            time_message_weight = millis();
+            message_last = message;
+            weght_last = weght;
+
+            Serial.print("[232] message_bt5:");
+            Serial.println(message_bt);
+
             return true;
         }
     }

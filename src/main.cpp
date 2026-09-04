@@ -1,11 +1,10 @@
 #include "header.h"
 HTTPClient http;
 
-uint16_t ver = 11;
-bool sleep_off = false;// для тестирования батариеи ПОСТАВИТЬ FALSE в INI файле!!!!
+uint16_t ver = 12;
+bool sleep_off = false; // для тестирования батариеи ПОСТАВИТЬ FALSE в INI файле!!!!
 
-
-bool flag_old = false; //флаг который говорит о том что нет в иги файле на сервере данные о напряжении батареии что запрещает сон
+bool flag_old = false; // флаг который говорит о том что нет в иги файле на сервере данные о напряжении батареии что запрещает сон
 const char *manifest_url = "http://controller-poliva.ru/otg/proton.json";
 BluetoothSerial SerialBT;
 const char *ssid = "proyagodu";
@@ -22,11 +21,9 @@ long long timer_4 = 0;
 long long timer_5 = 0;
 long long time_232 = 0;
 
-
-
-uint8_t mode = 1;// 1Весы 2тест для приложения 3 тест для стенда
-uint8_t protocol = 3; // 1 CaS 2 MассаК 3 Атол
-uint16_t UID = 0; // Номер 4
+uint8_t mode = 1;     // 1Весы 2тест для приложения 3 тест для стенда
+uint8_t protocol = 3; // 1 CaS 2 MассаК 3 Атол 5 СКИ-12 складские
+uint16_t UID = 0;     // Номер 4
 String message_bt = "";
 String message_last = "";
 long long time_message_weight = 0;
@@ -41,7 +38,6 @@ uint16_t power_low = 0;
 uint16_t power_hight = 0;
 uint16_t power_low_volt = 0;
 uint16_t power_hight_volt = 0;
-
 
 void setup()
 {
@@ -68,6 +64,10 @@ void setup()
    {
       Serial2.begin(9600);
    }
+   if (protocol == 5)
+   {
+      Serial2.begin(9600);
+   }
    Serial2.println("[SETUP] Start2");
 
    uint64_t chipid = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
@@ -89,48 +89,44 @@ void setup()
    // printf("%x\n", id_6);
    CHIPID = String(id_6, HEX) + ":" + String(id_5, HEX) + ":" + String(id_4, HEX) + ":" + String(id_3, HEX) + ":" + String(id_2, HEX) + ":" + String(id_1, HEX) + "_";
 
-
-
    float val = 0;
-      val = analogRead(POW);
-      val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
-      Serial.print("[SETUP] Power volt:");
-      Serial.println(val);
-      
-      Serial.print("[SETUP] power_low_volt/100.0:");
-      Serial.println(power_low_volt/100.0);
-      Serial.print("[SETUP] sleep_off:");
-      Serial.println(sleep_off);
-      Serial.print("[SETUP] flag_old:");
-      Serial.println(flag_old);
-   
+   val = analogRead(POW);
+   val = maps(val, power_low, power_hight, power_low_volt / 100.0, power_hight_volt / 100.0);
+   Serial.print("[SETUP] Power volt:");
+   Serial.println(val);
 
-      if(val <= (power_low_volt/100.0 - 0.05) && sleep_off && !flag_old ){ // спим напряжение неизкое для работы
-         Serial.print("[SETUP] Sleep low power");
-         esp_sleep_enable_timer_wakeup(40 * 1000000);
-         esp_deep_sleep_start();
-      }
+   Serial.print("[SETUP] power_low_volt/100.0:");
+   Serial.println(power_low_volt / 100.0);
+   Serial.print("[SETUP] sleep_off:");
+   Serial.println(sleep_off);
+   Serial.print("[SETUP] flag_old:");
+   Serial.println(flag_old);
+
+   if (val <= (power_low_volt / 100.0 - 0.05) && sleep_off && !flag_old)
+   { // спим напряжение неизкое для работы
+      Serial.print("[SETUP] Sleep low power");
+      esp_sleep_enable_timer_wakeup(40 * 1000000);
+      esp_deep_sleep_start();
+   }
 
    String uid = "WEIGHT_" + CHIPID + String(UID);
    SerialBT.begin(uid);
    Serial.print("[SETUP] BT Name:");
    Serial.println(uid);
 
-   if (val >= (power_low_volt/100.0 + 0.11) || flag_old)
+   if (val >= (power_low_volt / 100.0 + 0.11) || flag_old)
    {
 
       otg.setProgressCb(my_progress_callback);
       otg.setManifestURL(manifest_url);
       otg.printConfig();
       if (setup_wifi())
-      {  ini();
+      {
+         ini();
          update();
          WiFi.mode(WIFI_OFF);
       }
-
-         
-
-   } 
+   }
    digitalWrite(LED_PIN, HIGH);
    delay(3000);
    digitalWrite(LED_PIN, LOW);
@@ -205,8 +201,9 @@ void loop()
 
       float val = 0;
       val = analogRead(POW);
-      val = maps(val, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
-      if(val <= (power_low_volt/100.0 - 0.05) && sleep_off && !flag_old){  // сон по низкому напряжению 
+      val = maps(val, power_low, power_hight, power_low_volt / 100.0, power_hight_volt / 100.0);
+      if (val <= (power_low_volt / 100.0 - 0.05) && sleep_off && !flag_old)
+      { // сон по низкому напряжению
          Serial.print("[POWER] Sleep low power");
          esp_sleep_enable_timer_wakeup(40 * 1000000);
          esp_deep_sleep_start();
@@ -218,13 +215,13 @@ void loop()
          val_1 = analogRead(POW);
          Serial.print("[POWER] Power acp:");
          Serial.println(val_1);
-         val_1 = maps(val_1, power_low, power_hight, power_low_volt/100.0, power_hight_volt/100.0);
+         val_1 = maps(val_1, power_low, power_hight, power_low_volt / 100.0, power_hight_volt / 100.0);
          Serial.print("[POWER] Power volt:");
          Serial.println(val_1);
 
-         
-         if(power_low_volt/100.0 > 5.6 && power_low_volt/100.0 < 6.0){
-            val_1 = maps(val,power_low_volt/100.0, power_hight_volt/100.0, 3.70, 4.2);
+         if (power_low_volt / 100.0 > 5.6 && power_low_volt / 100.0 < 6.0)
+         {
+            val_1 = maps(val, power_low_volt / 100.0, power_hight_volt / 100.0, 3.70, 4.2);
             Serial.print("[POWER] Power volt 3.7-4.2 variant:");
             Serial.println(val_1);
          }
